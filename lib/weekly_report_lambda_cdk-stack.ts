@@ -81,7 +81,7 @@ export class WeeklyReportLambdaCdkStack extends cdk.Stack {
 
     // Create an EventBridge schedule to trigger the Lambda function
     new scheduler.CfnSchedule(this, 'TLWeeklyReportThreadSchedule', {
-      scheduleExpression: 'cron(44 13 ? * 6 *)', // Every Tuesday at 1:00 PM UTC (8:00 AM EST)
+      scheduleExpression: 'cron(0 23 ? * 6 *)', // Every Friday at 23:00 PM UTC (Friday at 6/7 PM EST depending on daylight saving time)
       flexibleTimeWindow: {
         mode: 'OFF',
       },
@@ -90,6 +90,81 @@ export class WeeklyReportLambdaCdkStack extends cdk.Stack {
         roleArn: schedulerRole.roleArn,
         input: JSON.stringify(
           { "data": "TL thread for Weekly Report. DUE AT 11:59 PM ON SUNDAY. <ENTER SLACK IDS TO AT>", "increment": 1, "password": "CRCSlackBot" }
+        ), // Adjust as needed
+      },
+    });
+
+    // Create an EventBridge schedule to trigger the Lambda function
+    new scheduler.CfnSchedule(this, 'MarketingWeeklyReportThreadSchedule', {
+      scheduleExpression: 'cron(5 23 ? * 6 *)', // Every Friday at 23:05 PM UTC (Friday at 6/7:05 PM EST depending on daylight saving time)
+      flexibleTimeWindow: {
+        mode: 'OFF',
+      },
+      target: {
+        arn: myLambda.functionArn,
+        roleArn: schedulerRole.roleArn,
+        input: JSON.stringify(
+          { "data": "Marketing thread for Weekly Report. DUE AT 11:59 PM ON SUNDAY. <ENTER SLACK IDS TO AT>", "increment": 0, "password": "CRCSlackBot" }
+        ), // Adjust as needed
+      },
+    });
+
+    // Create an EventBridge schedule to trigger the Lambda function
+    new scheduler.CfnSchedule(this, 'AutonomousWeeklyReportThreadSchedule', {
+      scheduleExpression: 'cron(6 23 ? * 6 *)', // Every Friday at 23:06 PM UTC (Friday at 6/7:06 PM EST depending on daylight saving time)
+      flexibleTimeWindow: {
+        mode: 'OFF',
+      },
+      target: {
+        arn: myLambda.functionArn,
+        roleArn: schedulerRole.roleArn,
+        input: JSON.stringify(
+          { "data": "Autonomous thread for Weekly Report. DUE AT 11:59 PM ON SUNDAY. <ENTER SLACK IDS TO AT>", "increment": 0, "password": "CRCSlackBot" }
+        ), // Adjust as needed
+      },
+    });
+
+    // Create an EventBridge schedule to trigger the Lambda function
+    new scheduler.CfnSchedule(this, 'KineticWeeklyReportThreadSchedule', {
+      scheduleExpression: 'cron(7 23 ? * 6 *)', // Every Friday at 23:07 PM UTC (Friday at 6/7:07 PM EST depending on daylight saving time)
+      flexibleTimeWindow: {
+        mode: 'OFF',
+      },
+      target: {
+        arn: myLambda.functionArn,
+        roleArn: schedulerRole.roleArn,
+        input: JSON.stringify(
+          { "data": "Kinetic thread for Weekly Report. DUE AT 11:59 PM ON SUNDAY. <ENTER SLACK IDS TO AT>", "increment": 0, "password": "CRCSlackBot" }
+        ), // Adjust as needed
+      },
+    });
+
+    // Create an EventBridge schedule to trigger the Lambda function
+    new scheduler.CfnSchedule(this, 'SportsmanWeeklyReportThreadSchedule', {
+      scheduleExpression: 'cron(8 23 ? * 6 *)', // Every Friday at 23:00 PM UTC (Friday at 6/7:08 PM EST depending on daylight saving time)
+      flexibleTimeWindow: {
+        mode: 'OFF',
+      },
+      target: {
+        arn: myLambda.functionArn,
+        roleArn: schedulerRole.roleArn,
+        input: JSON.stringify(
+          { "data": "Sportsman thread for Weekly Report. DUE AT 11:59 PM ON SUNDAY. <ENTER SLACK IDS TO AT>", "increment": 0, "password": "CRCSlackBot" }
+        ), // Adjust as needed
+      },
+    });
+
+    // Create an EventBridge schedule to trigger the Lambda function
+    new scheduler.CfnSchedule(this, 'DeadlineReminderThreadSchedule', {
+      scheduleExpression: 'cron(0,30 3 ? * 2 *)', // Every Monday at 3:00 & 3:30 AM UTC (Sunday at (11:00 & 11:30)/(10:00 & 10:30) PM EST depending on daylight saving time)
+      flexibleTimeWindow: {
+        mode: 'OFF',
+      },
+      target: {
+        arn: myLambda.functionArn,
+        roleArn: schedulerRole.roleArn,
+        input: JSON.stringify(
+          { "data": "Weekly Report is DUE TONIGHT. Make sure to turn it in! <ENTER SLACK IDS TO AT>", "increment": 0, "password": "CRCSlackBot" }
         ), // Adjust as needed
       },
     });
