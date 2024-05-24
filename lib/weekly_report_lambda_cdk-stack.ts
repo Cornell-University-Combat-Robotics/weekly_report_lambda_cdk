@@ -81,14 +81,16 @@ export class WeeklyReportLambdaCdkStack extends cdk.Stack {
 
     // Create an EventBridge schedule to trigger the Lambda function
     new scheduler.CfnSchedule(this, 'TLWeeklyReportThreadSchedule', {
-      scheduleExpression: 'cron(0 8 ? * 2 *)', // Every Tuesday at 8:00 AM
+      scheduleExpression: 'cron(44 13 ? * 6 *)', // Every Tuesday at 1:00 PM UTC (8:00 AM EST)
       flexibleTimeWindow: {
         mode: 'OFF',
       },
       target: {
         arn: myLambda.functionArn,
         roleArn: schedulerRole.roleArn,
-        input: JSON.stringify({ key: 'value' }), // Adjust as needed
+        input: JSON.stringify(
+          { "data": "TL thread for Weekly Report. DUE AT 11:59 PM ON SUNDAY. <ENTER SLACK IDS TO AT>", "increment": 1, "password": "CRCSlackBot" }
+        ), // Adjust as needed
       },
     });
   }
