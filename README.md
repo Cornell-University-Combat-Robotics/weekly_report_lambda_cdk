@@ -30,7 +30,7 @@ To create a CDK (Cloud Development Kit) for deploying a Lambda function in your 
 3. **AWS CDK**: Install the AWS CDK globally using npm:
   * `npm install -g aws-cdk`
 
-### Steps to Create a CDK Project and Deploy a Lambda Function
+### Steps to Create a CDK Project
 
 * `mkdir my-cdk`
 * `cd my-cdk`
