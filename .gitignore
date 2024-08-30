@@ -8,3 +8,7 @@ node_modules
 cdk.out
 
 .env
+.DS_Store
+lambda/dynamodb_data.json
+lambda/filtered_sorted_output.csv
+lambda/Member Info - Fall 2024.csv
