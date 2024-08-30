@@ -22,7 +22,7 @@ def lambda_handler(event, context):
     # Define the table name and the key of the item you want to retrieve and update
     table_name = os.environ.get('TABLE_NAME')
     table = dynamodb.Table(table_name)
-    key_to_retrieve = {'sem': 'Fa23'}  # Replace 'Fa23' with the actual key
+    key_to_retrieve = {'sem': 'Fa24'}  # Replace 'Fa24' with the actual key
 
     try:
         # Retrieve the item from DynamoDB
@@ -42,7 +42,7 @@ def lambda_handler(event, context):
             # Handle the case where the item does not exist
             week_num = 1  # Start with a default value or handle accordingly
             # Optionally, create the item if it does not exist
-            table.put_item(Item={'sem': 'Fa23', 'week_num': week_num})  # Replace 'Fa23' with the actual key
+            table.put_item(Item={'sem': 'Fa24', 'week_num': week_num})  # Replace 'Fa23' with the actual key
     except ClientError as e:
         # Handle the error
         return {
