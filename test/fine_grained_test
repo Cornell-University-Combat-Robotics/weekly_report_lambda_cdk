@@ -1,0 +1,90 @@
+import os
+import datetime
+import pytz
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
+
+def get_timestamps_two_days_prior():
+    est = pytz.timezone('America/New_York')
+
+    # Get the current time in EST
+    now_est = datetime.datetime.now(est)
+
+    # Calculate the time two days ago
+    two_days_ago = now_est - datetime.timedelta(days=2, hours=2)  # + 2hr to address changing to daylight saving time
+
+    timestamp_start = two_days_ago.replace(hour=18, minute=0, second=0, microsecond=0)  # 7pm - 1hr
+    timestamp_end = two_days_ago.replace(hour=22, minute=15, second=0, microsecond=0)  # 9pm + 1hr + 15min
+
+    return timestamp_start.timestamp(), timestamp_end.timestamp()
+
+def notify_users_with_files_in_thread_replies(slack_token, channel_id, timestamp_start, timestamp_end, all_user_ids):
+    client = WebClient(token=slack_token)
+    user_ids_already_replied = set()
+
+    try:
+        # Fetch conversation history
+        response = client.conversations_history(
+            channel=channel_id,
+            oldest=timestamp_start,
+            latest=timestamp_end
+        )
+
+        # Print the fetched messages for debugging
+        print("Fetched Messages:")
+        for message in response['messages']:
+            print(message)
+
+        # Process each message to find replies with files
+        for message in response['messages']:
+            if 'reply_count' in message and message['reply_count'] > 0:
+                thread_ts = message['thread_ts']
+                thread_replies = client.conversations_replies(
+                    channel=channel_id,
+                    ts=thread_ts
+                )
+
+                # Print the fetched thread replies for debugging
+                print(f"Thread Replies for message {thread_ts}:")
+                for reply in thread_replies['messages']:
+                    print(reply)
+
+                # Check for file attachments in replies
+                for reply in thread_replies['messages'][1:]:
+                    if 'files' in reply:
+                        for file in reply['files']:
+                            if file['filetype'] in ['png', 'jpg', 'jpeg', 'pdf']:
+                                user_id = reply.get('user')
+                                if user_id:
+                                    user_ids_already_replied.add(user_id)
+        print(f"User IDs already replied: {user_ids_already_replied}")
+
+        # Determine which users to notify
+        user_ids_to_notify = all_user_ids - user_ids_already_replied
+
+        # Print the output to the console instead of sending a message
+        if user_ids_to_notify:
+            user_mentions = ' '.join([f'<@{user_id}>' for user_id in user_ids_to_notify])
+            message = f"{user_mentions}, please turn in your weekly report!"
+            print(f"Notification Message: {message}")
+        else:
+            message = "Let's go! Seems that everyone has turned in the weekly report!"
+            print(f"Notification Message: {message}")
+
+    except SlackApiError as e:
+        print(f"Error fetching Slack data: {e.response['error']}")
+
+if __name__ == "__main__":
+    # Ensure you set these environment variables or replace with your values directly
+
+    slack_token = 'xoxb-786449602374-6482999081171-pPH2mDYChuC6HLV46GzTkOsd'
+    channel_id = 'C03UYNDBUPQ'
+    
+    # Replace with actual user IDs or mock data for testing
+    all_user_ids = {"U048E6QPL6L", "U0479UV8J3H", "U0629GNB30S", "U0626JY9D6H", "U062N619HJ5", "U0479UVACTH", "U062N63DNL9", "U0622T7AY3Y", "U0629DTASNP", "U02KPCJLA9G", "U0629GKTWJW", "U048E6QP8C8", "U047QD6FGD9", "U062N63F57T", "U0626JW4STX", "U0626JXR23X", "U047HT1KUVC", "U0629GL6B26", "U062C0M9JG4", "U047MGYRZ61", "U02LD2XSZNC", "U0629DV3STV", "U047HT1JFAA", "U0629DUCJAF", "U0626JWR52R", "U047SV1E5C4", "U061V0VDMHV", "U062YGF5Q0Y", "U0629DUMV0T", "U047QD6DNJX"}
+
+    # Get timestamps for two days prior
+    timestamp_start, timestamp_end = get_timestamps_two_days_prior()
+
+    # Call the function to fetch Slack history and print output
+    notify_users_with_files_in_thread_replies(slack_token, channel_id, timestamp_start, timestamp_end, all_user_ids)
