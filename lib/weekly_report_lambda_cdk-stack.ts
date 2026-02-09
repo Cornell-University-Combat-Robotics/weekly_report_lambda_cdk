@@ -30,9 +30,10 @@ export class WeeklyReportLambdaCdkStack extends cdk.Stack {
       timeout: cdk.Duration.minutes(1), // Set the timeout to 1 minute
     });
 
-    // Add environment variables
+    // Add environment variables. For Sunday reminder, set SLACK_CHANNEL_ID to the channel ID (e.g. C03UYNDBUPQ).
     myLambda.addEnvironment('SLACK_PASSWORD', 'CRCSlackBot');
     myLambda.addEnvironment('SLACK_CHANNEL', 'tasks-weekly-report');
+    myLambda.addEnvironment('SLACK_CHANNEL_ID', process.env.SLACK_CHANNEL_ID ?? ''); // optional; required for reminder mode
     myLambda.addEnvironment('SLACK_TOKEN', process.env.SLACK_TOKEN!);
     myLambda.addEnvironment('TABLE_NAME', table.tableName);
 
@@ -154,18 +155,29 @@ export class WeeklyReportLambdaCdkStack extends cdk.Stack {
       },
     });
 
-    // Create an EventBridge schedule to trigger the Lambda function
-    new scheduler.CfnSchedule(this, 'DeadlineReminderThreadSchedule', {
-      scheduleExpression: 'cron(0,30 3 ? * 2 *)', // Every Monday at 3:00 & 3:30 AM UTC (Sunday at (11:00 & 11:30)/(10:00 & 10:30) PM EST depending on daylight saving time)
-      flexibleTimeWindow: {
-        mode: 'OFF',
-      },
+    // Sunday: normal reminder (generic “due tonight” message; no fine-grain check)
+    new scheduler.CfnSchedule(this, 'GeneralDeadlineReminderSchedule', {
+      scheduleExpression: 'cron(0 2 ? * 2 *)', // Monday 2:00 UTC = Sunday 9pm EST (or 10pm EDT)
+      flexibleTimeWindow: { mode: 'OFF' },
       target: {
         arn: myLambda.functionArn,
         roleArn: schedulerRole.roleArn,
-        input: JSON.stringify(
-          { "data": "Weekly Report is DUE TONIGHT. Make sure to turn it in! <ENTER SLACK IDS TO AT>", "increment": 0, "password": "CRCSlackBot" }
-        ), // Adjust as needed
+        input: JSON.stringify({
+          data: 'Weekly Report is DUE TONIGHT. Make sure to turn it in!',
+          increment: 0,
+          password: 'CRCSlackBot',
+        }),
+      },
+    });
+
+    // Sunday last hour: fine-grain reminder – only @ people who have not submitted (image/pdf in Friday thread)
+    new scheduler.CfnSchedule(this, 'DeadlineReminderThreadSchedule', {
+      scheduleExpression: 'cron(0,30 3 ? * 2 *)', // Monday 3:00 & 3:30 UTC = Sunday 10/11 PM EST
+      flexibleTimeWindow: { mode: 'OFF' },
+      target: {
+        arn: myLambda.functionArn,
+        roleArn: schedulerRole.roleArn,
+        input: JSON.stringify({ reminder: true, password: 'CRCSlackBot' }),
       },
     });
   }
