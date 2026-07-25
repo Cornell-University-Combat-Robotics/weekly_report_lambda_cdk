@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weekly Report — Semester Plan</title>
+<style>
+  :root {
+    --bg: #fbfbfd; --panel: #fff; --ink: #1a1c20; --muted: #6b7280;
+    --line: #e4e6eb; --accent: #b31b1b; --accent-soft: #fdeaea;
+    --normal: #eef2ff; --normal-ink: #3730a3;
+    --moved: #fff7e6; --moved-ink: #92400e;
+    --skip: #f3f4f6; --skip-ink: #6b7280;
+    --ok: #ecfdf5; --ok-ink: #065f46;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a; --panel: #1c1f24; --ink: #e8eaed; --muted: #9aa0a6;
+      --line: #2c3036; --accent: #f87171; --accent-soft: #3a1d1d;
+      --normal: #1e2a4a; --normal-ink: #a5b4fc;
+      --moved: #3d2f14; --moved-ink: #fcd34d;
+      --skip: #26292e; --skip-ink: #9aa0a6;
+      --ok: #12332a; --ok-ink: #6ee7b7;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 2rem 1rem 4rem; background: var(--bg); color: var(--ink);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  header { display: flex; flex-wrap: wrap; gap: 1rem; align-items: baseline; justify-content: space-between; margin-bottom: 1.5rem; }
+  h1 { font-size: 1.5rem; margin: 0; letter-spacing: -0.01em; }
+  h1 span { color: var(--accent); }
+  .controls { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+  select, button, input {
+    font: inherit; padding: .4rem .7rem; border-radius: 7px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+  }
+  button { cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 1.25rem; }
+  .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .75rem 1.5rem; }
+  .meta-grid dt { font-size: .74rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .meta-grid dd { margin: .15rem 0 0; font-variant-numeric: tabular-nums; }
+  .banner { font-size: .87rem; color: var(--muted); margin-top: .8rem; padding-top: .8rem; border-top: 1px solid var(--line); }
+  .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { border-collapse: collapse; width: 100%; min-width: 760px; }
+  th, td { text-align: left; padding: .6rem .7rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { font-size: .74rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+  td.num { font-variant-numeric: tabular-nums; }
+  tr.skip td { color: var(--skip-ink); }
+  .badge { display: inline-block; padding: .12rem .5rem; border-radius: 999px; font-size: .75rem; font-weight: 600; }
+  .badge.NORMAL { background: var(--normal); color: var(--normal-ink); }
+  .badge.SKIP { background: var(--skip); color: var(--skip-ink); }
+  .badge.moved { background: var(--moved); color: var(--moved-ink); }
+  .tag { display: inline-block; margin-left: .35rem; padding: .05rem .4rem; border-radius: 4px; font-size: .7rem; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .roster { font-size: .8rem; color: var(--muted); white-space: normal; max-width: 260px; }
+  .roster .src { font-size: .74rem; opacity: .8; }
+  .tag.warn { background: var(--moved); color: var(--moved-ink); }
+  .status { padding: .5rem .8rem; border-radius: 8px; font-size: .88rem; margin-bottom: 1rem; }
+  .status.err { background: var(--accent-soft); color: var(--accent); }
+  .status.ok { background: var(--ok); color: var(--ok-ink); }
+  dialog { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--ink); padding: 1.25rem; max-width: 460px; width: calc(100% - 2rem); }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  dialog h2 { margin: 0 0 .9rem; font-size: 1.1rem; }
+  label { display: block; margin: .7rem 0 .2rem; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  input, select { width: 100%; }
+  .row { display: flex; gap: .6rem; justify-content: flex-end; margin-top: 1.2rem; }
+  .hint { font-size: .8rem; color: var(--muted); margin-top: .5rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Weekly Report <span>&middot;</span> Semester Plan</h1>
+    <div class="controls">
+      <select id="sem"></select>
+      <input id="pass" type="password" placeholder="Passphrase to edit" autocomplete="current-password" style="width:190px">
+      <button id="reload">Reload</button>
+    </div>
+  </header>
+
+  <div id="status" class="status" hidden></div>
+
+  <div class="panel">
+    <dl class="meta-grid" id="meta"></dl>
+    <div class="banner" id="metaBanner"></div>
+  </div>
+
+  <div class="panel scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Wk</th><th>Week of</th><th>Mode</th><th>Thread posts</th>
+          <th>Reminders</th><th>Ping</th><th>Due</th><th>Roster</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <p class="hint" id="footnote"></p>
+</div>
+
+<dialog id="editor">
+  <form method="dialog">
+    <h2 id="editTitle">Edit week</h2>
+    <label for="fMode">Mode</label>
+    <select id="fMode">
+      <option>NORMAL</option><option>MONDAY</option><option>TUESDAY</option>
+      <option>WEDNESDAY</option><option>THURSDAY</option><option>FRIDAY</option>
+      <option>SKIP</option>
+    </select>
+    <p class="hint">Picking a mode refills the standard times for that shape.
+      Set a time below to override just that one.</p>
+    <label for="fPost">Thread posts at</label>
+    <input id="fPost" type="datetime-local">
+    <label for="fDue">Due</label>
+    <input id="fDue" type="datetime-local">
+    <div class="row">
+      <button value="cancel">Cancel</button>
+      <button id="save" class="primary" value="save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+// Point this at the ApiUrl output from `cdk deploy`.
+const API_BASE = window.API_BASE || "https://th8ci5pa87.execute-api.us-east-1.amazonaws.com";
+
+const $ = (id) => document.getElementById(id);
+const MOVED = ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
+let plan = { weeks: [], meta: null };
+
+function semOptions() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const out = [];
+  for (let y = year + 1; y >= year - 2; y--) {
+    out.push(`Sp${String(y).slice(2)}`, `Fa${String(y).slice(2)}`);
+  }
+  const guess = now.getMonth() >= 6 ? `Fa${String(year).slice(2)}` : `Sp${String(year).slice(2)}`;
+  $("sem").innerHTML = out.map(s => `<option${s === guess ? " selected" : ""}>${s}</option>`).join("");
+}
+
+function say(message, kind) {
+  const el = $("status");
+  el.hidden = !message;
+  el.textContent = message || "";
+  el.className = "status " + (kind || "");
+}
+
+const fmtDateTime = (iso) => {
+  if (!iso) return "—";
+  const [d, t] = iso.split("T");
+  const day = new Date(d + "T00:00:00").toLocaleDateString(undefined,
+    { weekday: "short", month: "short", day: "numeric" });
+  return t ? `${day} ${t.slice(0, 5)}` : day;
+};
+const fmtDate = (iso) => iso
+  ? new Date(iso + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" })
+  : "—";
+
+function badge(week) {
+  const cls = MOVED.includes(week.mode) ? "moved" : week.mode;
+  const label = week.mode === "NORMAL" ? "Normal"
+    : week.mode === "SKIP" ? "Skip"
+    : week.mode.charAt(0) + week.mode.slice(1).toLowerCase();
+  return `<span class="badge ${cls}">${label}</span>` +
+    (week.overridden ? '<span class="tag">edited</span>' : "");
+}
+
+function rosterCell(week) {
+  const rosters = week.rosters || {};
+  const names = Object.keys(rosters).sort();
+  if (!names.length) return '<span class="roster">not yet synced</span>';
+
+  const total = names.reduce((n, k) => n + (rosters[k] || []).length, 0);
+  const source = week.roster_tab
+    ? `<br><span class="src">from “${week.roster_tab}”</span>`
+    : "";
+  // The refresher falls back to the newest tab when this semester's tab does
+  // not exist yet, which means the roster is last term's. Say so here rather
+  // than only in CloudWatch.
+  const stale = week.roster_is_fallback
+    ? '<span class="tag warn" title="No tab for this semester yet — this roster is from an earlier term">stale</span>'
+    : "";
+
+  return `<span class="roster" title="${names.join(", ")}">` +
+         `${total} across ${names.length} subteams${stale}${source}</span>`;
+}
+
+function render() {
+  const canEdit = !!$("pass").value;
+
+  $("meta").innerHTML = plan.meta ? [
+    ["Instruction begins", fmtDate(plan.meta.instruction_begins)],
+    ["Last instruction day", fmtDate(plan.meta.last_instruction_day)],
+    ["No-class ranges", (plan.meta.no_class || [])
+      .map(([a, b]) => a === b ? fmtDate(a) : `${fmtDate(a)} – ${fmtDate(b)}`).join(", ") || "—"],
+  ].map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")
+    : "<div><dt>Calendar</dt><dd>no plan found for this semester</dd></div>";
+
+  $("metaBanner").textContent = plan.meta
+    ? "These dates come from the registrar PDF (or the built-in fallback). If they look wrong, fix the affected weeks below — the planner will not overwrite an edited week."
+    : "Run the planner Lambda to seed this semester.";
+
+  $("rows").innerHTML = plan.weeks.map(week => `
+    <tr class="${week.skip ? "skip" : ""}">
+      <td class="num">${week.week}</td>
+      <td>${fmtDate(week.week_start)}</td>
+      <td>${badge(week)}</td>
+      <td>${fmtDateTime(week.post_at)}</td>
+      <td>${(week.remind_at || []).map(r => r.split("T")[1].slice(0, 5)).join(", ") || "—"}</td>
+      <td>${week.ping_at ? week.ping_at.split("T")[1].slice(0, 5) : "—"}</td>
+      <td>${fmtDateTime(week.due)}</td>
+      <td>${rosterCell(week)}</td>
+      <td><button data-week="${week.week}" ${canEdit ? "" : "disabled"}>Edit</button></td>
+    </tr>`).join("");
+
+  const reporting = plan.weeks.filter(w => !w.skip).length;
+  $("footnote").textContent = plan.weeks.length
+    ? `${plan.weeks.length} numbered weeks, ${reporting} reports collected.` +
+      (canEdit ? "" : " Viewing only — enter the passphrase to edit.")
+    : "";
+
+  document.querySelectorAll("#rows button").forEach(button =>
+    button.addEventListener("click", () => openEditor(Number(button.dataset.week))));
+}
+
+async function load() {
+  const sem = $("sem").value;
+  say("Loading " + sem + "…");
+  try {
+    const response = await fetch(`${API_BASE}/plan?sem=${encodeURIComponent(sem)}`);
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+    plan = await response.json();
+    say(plan.weeks.length ? "" : `No plan stored for ${sem}.`, plan.weeks.length ? "" : "err");
+  } catch (error) {
+    plan = { weeks: [], meta: null };
+    say(`Could not load the plan: ${error.message}`, "err");
+  }
+  render();
+}
+
+function openEditor(number) {
+  const week = plan.weeks.find(w => Number(w.week) === number);
+  if (!week) return;
+  $("editTitle").textContent = `Week ${number} — week of ${fmtDate(week.week_start)}`;
+  $("fMode").value = week.mode;
+  $("fPost").value = week.post_at || "";
+  $("fDue").value = week.due || "";
+  $("editor").returnValue = "cancel";
+  $("editor").showModal();
+  $("editor").dataset.week = number;
+}
+
+$("editor").addEventListener("close", async (event) => {
+  if ($("editor").returnValue !== "save") return;
+  const number = Number($("editor").dataset.week);
+  const original = plan.weeks.find(w => Number(w.week) === number);
+
+  // Send only what actually changed, so the server's mode defaults still apply.
+  // A datetime-local input drops zero seconds ("…T19:00"), while the stored
+  // value keeps them ("…T19:00:00"), so compare in the stored form — otherwise
+  // an untouched time looks edited, and sending it suppresses the mode defaults.
+  const normalise = (value) => (value && value.length === 16 ? value + ":00" : value);
+
+  const fields = {};
+  const post = normalise($("fPost").value);
+  const due = normalise($("fDue").value);
+  if ($("fMode").value !== original.mode) fields.mode = $("fMode").value;
+  if (post && post !== original.post_at) fields.post_at = post;
+  if (due && due !== original.due) fields.due = due;
+  if (!Object.keys(fields).length) return say("Nothing changed.", "");
+
+  say(`Saving week ${number}…`);
+  try {
+    const response = await fetch(`${API_BASE}/plan/week`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ sem: $("sem").value, week: number, fields, passphrase: $("pass").value }),
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || response.statusText);
+    plan.weeks = plan.weeks.map(w => Number(w.week) === number ? body : w);
+    render();
+    say(`Week ${number} saved.`, "ok");
+  } catch (error) {
+    say(`Could not save week ${number}: ${error.message}`, "err");
+  }
+});
+
+$("reload").addEventListener("click", load);
+$("sem").addEventListener("change", load);
+$("pass").addEventListener("input", render);
+
+semOptions();
+load();
+</script>
+</body>
+</html>

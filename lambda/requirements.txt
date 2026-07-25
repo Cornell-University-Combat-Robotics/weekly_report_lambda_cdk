@@ -1,2 +1,13 @@
-slack_sdk>=3.21.0
-pytz>=2023.3
+# Vendored into the deployment package by:
+#   cd lambda && pip install -r requirements.txt -t . && cd ..
+#
+# boto3 is supplied by the Lambda runtime, so it is deliberately not listed.
+# Timezones use the stdlib zoneinfo (verified working on the Python 3.11
+# runtime), so pytz is no longer needed. The refresher reads the member
+# sheet's public CSV export with urllib + csv, so gspread, google-auth and
+# requests are no longer needed either.
+
+slack_sdk>=3.21.0   # dispatcher: posting threads, reminders and pings
+pypdf>=4.0.0        # planner: reading the academic-calendar PDF
+google-auth>=2.28.0 # refresher: service-account auth for the private sheet
+requests>=2.31.0    # refresher: google-auth's AuthorizedSession transport
