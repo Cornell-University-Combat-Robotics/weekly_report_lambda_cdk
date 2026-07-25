@@ -8,7 +8,10 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "build:lambda": "bash scripts/build-lambda.sh",
+    "test:lambda": "cd lambda && python3 -m pytest -q",
+    "prebuild": "npm run build:lambda"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
